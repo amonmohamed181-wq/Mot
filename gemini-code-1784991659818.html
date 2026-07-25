@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEED STOR - سيستم البطولات والشجرة الكاملة 🏆</title>
+    <style>
+        :root {
+            --bg-main: #06090e;
+            --card-bg: rgba(18, 24, 38, 0.95);
+            --neon-primary: #ff2a5f;
+            --neon-cyan: #00f2fe;
+            --neon-gold: #ffb703;
+            --neon-green: #00e676;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-main); color: #fff; padding-bottom: 90px; }
+
+        /* Navigation Bar */
+        nav { display: flex; justify-content: center; gap: 8px; background: rgba(12, 16, 25, 0.98); padding: 12px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        nav button { background: #182030; color: #a0aec0; border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        nav button.active { background: var(--neon-primary); color: #fff; border-color: var(--neon-primary); box-shadow: 0 0 12px var(--neon-primary); }
+
+        .container { max-width: 950px; margin: 20px auto; padding: 0 12px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card-3d { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 18px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        
+        /* Counter Box */
+        .counter-card { background: linear-gradient(135deg, rgba(0,242,254,0.1), rgba(255,42,95,0.1)); border: 1px solid var(--neon-cyan); border-radius: 14px; padding: 15px; text-align: center; margin-bottom: 15px; }
+        .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 20px; height: 14px; overflow: hidden; margin-top: 10px; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); height: 100%; width: 0%; transition: width 0.4s ease; }
+
+        .cash-box { background: rgba(0, 230, 118, 0.1); border: 2px dashed var(--neon-green); border-radius: 12px; padding: 14px; text-align: center; margin-bottom: 15px; }
+        .cash-number { font-size: 24px; font-weight: 900; color: var(--neon-green); letter-spacing: 1px; margin: 5px 0; }
+
+        /* الشجرة المجسمة Visual Tournament Tree Layout */
+        .bracket-wrapper { overflow-x: auto; padding: 15px 0; }
+        .bracket-tree { display: flex; gap: 30px; justify-content: flex-start; min-width: 800px; }
+        .bracket-column { display: flex; flex-direction: column; justify-content: space-around; width: 250px; }
+        .column-header { text-align: center; color: var(--neon-cyan); font-weight: bold; margin-bottom: 12px; font-size: 13px; border-bottom: 2px solid var(--neon-cyan); padding-bottom: 6px; }
+
+        /* ورقة الشجرة / Node Box */
+        .tree-leaf { background: rgba(10, 14, 22, 0.95); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 10px; margin: 10px 0; position: relative; box-shadow: 0 4px 15px rgba(0,242,254,0.1); transition: all 0.3s; }
+        .tree-leaf:hover { border-color: var(--neon-gold); }
+        .group-tag { font-size: 10px; background: var(--neon-primary); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 4px; }
+        
+        .player-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px; margin: 4px 0; font-size: 12px; }
+        .player-row.winner { background: rgba(0, 230, 118, 0.25); border: 1px solid var(--neon-green); color: var(--neon-green); font-weight: bold; }
+        .vs-tag { text-align: center; font-size: 10px; color: var(--neon-gold); font-weight: bold; margin: 2px 0; }
+
+        /* Floating WhatsApp Button */
+        .float-wa { position: fixed; bottom: 15px; left: 15px; background: #25d366; color: white; border-radius: 50px; padding: 10px 18px; font-weight: bold; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,0.6); z-index: 9999; font-size: 13px; }
+
+        .form-group { text-align: right; margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 12px; color: #aaa; }
+        .form-group input { width: 100%; padding: 10px; background: #000; border: 1px solid #333; border-radius: 8px; color: #fff; }
+        .btn-submit { width: 100%; padding: 12px; background: var(--neon-green); border: none; font-weight: bold; border-radius: 8px; cursor: pointer; color: #000; font-size: 14px; }
+        .btn-copy { background: #222; color: #fff; border: 1px solid #555; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        .admin-btn { padding: 6px 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; background: var(--neon-green); color: #000; margin-top: 4px; }
+        .admin-btn-red { background: var(--neon-primary); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- زر خدمة العملاء واتساب العائم -->
+    <a href="https://wa.me/201030154528" target="_blank" class="float-wa">💬 خدمة العملاء واتساب (01030154528)</a>
+
+    <nav>
+        <button class="active" onclick="switchTab('registerTab', this)">الاشتراك والتسجيل 📝</button>
+        <button onclick="switchTab('prizesTab', this)">الجوائز 🔥</button>
+        <button onclick="switchTab('bracketTab', this)">شجرة البطولات 🏆</button>
+        <button onclick="openAdminLogin(this)">الأدمن 👑</button>
+    </nav>
+
+    <div class="container">
+
+        <!-- 1. صفحة التسجيل والاشتراك والانتظار -->
+        <div id="registerTab" class="tab-content active">
+            
+            <!-- عداد اكتمال البطولة -->
+            <div class="counter-card">
+                <h4 style="color:var(--neon-gold); font-size: 14px;">🔥 المقبولين في البطولة الحالية</h4>
+                <div style="font-size: 22px; font-weight: 900; margin-top:4px;">
+                    <span id="registeredCount" style="color:var(--neon-cyan);">0</span> / <span style="color:var(--neon-primary);">50 لاعب</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progressBarFill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <!-- شاشة قفل الحساب وقيد الانتظار للمراجعة -->
+            <div id="userLockedNotice" style="display:none;" class="card-3d" style="text-align: center;">
+                <h3 style="color: var(--neon-gold); margin-bottom: 10px;">⏳ طلبك قيد المراجعة والانتظار</h3>
+                <p style="font-size: 13px; color: #aaa; margin: 8px 0;">الـ ID المسجل: <b id="myRegisteredID" style="color:#fff;"></b></p>
+                <p style="font-size: 12px; color: #888; line-height: 1.6;">🔒 التطبيق وشجرة المجموعات مقفولين تماماً بوجهك حالياً. لن يتم نزول اسمك ومجموعتك في الشجرة إلا بعد مراجعة تحويلك وتأكيده من قبل الأدمن.</p>
+                <a href="https://wa.me/201030154528" target="_blank" style="display:block; text-align:center; background:#25d366; color:#fff; text-decoration:none; padding:12px; border-radius:8px; font-weight:bold; margin-top:15px;">إرسال إيصال التحويل للأدمن لتأكيد القبول 💬</a>
+            </div>
+
+            <!-- شاشة التنبيه باكتمل العدد وقائمة انتظار البطولة القادمة -->
+            <div id="fullTournamentNotice" style="display:none;" class="card-3d" style="text-align: center; border-color: var(--neon-primary);">
+                <h3 style="color: var(--neon-primary);">⚠️ اكتمال عدد البطولة الأولى (50/50)</h3>
+                <p style="font-size: 13px; color: #ccc; margin-top: 8px;">التسجيل في البطولة الحالية مغلق. عند قيامك بالتسجيل الآن سيتسجل اسمك تلقائياً في **قائمة انتظار البطولة القادمة**.</p>
+            </div>
+
+            <!-- فورم التسجيل الرئيسي -->
+            <div id="registerForm">
+                <div class="cash-box">
+                    <p style="font-size: 12px; color: #aaa;">حوّل قيمة الاشتراك (20 جنيه) على رقم فودافون كاش:</p>
+                    <div class="cash-number">01044101582</div>
+                    <button class="btn-copy" onclick="copyCashNumber()">نسخ الرقم 📋</button>
+                </div>
+
+                <div class="card-3d">
+                    <h3 style="margin-bottom: 12px; text-align: center;">تسجيل بيانات المشترك</h3>
+                    <div class="form-group">
+                        <label>اسمك داخل اللعبة (Nickname)</label>
+                        <input type="text" id="pName" placeholder="مثال: LEED_HERO">
+                    </div>
+                    <div class="form-group">
+                        <label>الـ ID في اللعبة (تسجيل مرة واحدة فقط)</label>
+                        <input type="text" id="pID" placeholder="مثال: 512345678">
+                    </div>
+                    <div class="form-group">
+                        <label>رقمك المحول منه كاش</label>
+                        <input type="text" id="pPhone" placeholder="010xxxxxxxx">
+                    </div>
+                    <button class="btn-submit" onclick="submitRegister()">تأكيد وإرسال طلب الاشتراك 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. صفحة الجوائز -->
+        <div id="prizesTab" class="tab-content">
+            <div class="card-3d" style="text-align: center;">
+                <h2 style="color: var(--neon-gold); margin-bottom: 15px;">💰 جوائز البطولة الرسمية (50 لاعب)</h2>
+                <p>🥇 <b>المركز الأول:</b> 400 جنيه كاش</p><hr style="opacity:0.1; margin:10px 0;">
+                <p>🥈 <b>المركز الثاني:</b> 150 جنيه</p><hr style="opacity:0.1; margin:10px 0;">
+                <p>🥉 <b>المركز الثالث:</b> 75 جنيه كاش</p>
+            </div>
+        </div>
+
+        <!-- 3. المجموعات والشجرة المباشرة المجسمة -->
+        <div id="bracketTab" class="tab-content">
+            <div class="card-3d">
+                <h3 style="text-align: center; color: var(--neon-cyan); margin-bottom: 5px;">🏆 شجرة المجموعات والمواجهات المباشرة</h3>
+                <p style="text-align: center; font-size: 11px; color: #888; margin-bottom: 15px;">توزيع المجموعات الخماسية (كل ورقة توضح اسم اللاعب ورقم مجموعته ورقم ID)</p>
+                
+                <div class="bracket-wrapper">
+                    <div id="visualBracketTree" class="bracket-tree">
+                        <!-- الشجرة بتترسم هنا بالكامل بأوراقها واسامي الاعيبة والمجموعات -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. لوحة الأدمن للتحكم والإدارة -->
+        <div id="adminTab" class="tab-content">
+            <div class="card-3d">
+                <h3 style="color: var(--neon-primary); text-align: center; margin-bottom: 15px;">👑 لوحة الأدمن والقرعة والانتظار</h3>
+                
+                <button class="btn-submit" style="background:var(--neon-cyan); margin-bottom:15px;" onclick="generateGroupsDraw()">🎲 إجراء القرعة وتوزيع المجموعات (5 لاعيبة لكل مجموعة)</button>
+
+                <h4 style="color: var(--neon-gold); font-size: 14px; margin-bottom: 8px;">1. طلبات الاشتراك المعلقة للبطولة الحالية:</h4>
+                <div id="pendingRequests"></div>
+
+                <h4 style="color: var(--neon-primary); font-size: 14px; margin-top: 20px; margin-bottom: 8px;">2. لاعبين قائمة الانتظار (للبطولة القادمة):</h4>
+                <div id="waitlistRequests"></div>
+
+                <h4 style="color: var(--neon-cyan); font-size: 14px; margin-top: 20px; margin-bottom: 8px;">3. إدارة نتائج المواجهات والتأهل المباشر (1v1):</h4>
+                <div id="adminMatchControl"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const ADMIN_PASS = "5432112345678900";
+        const MAX_PLAYERS = 50;
+
+        window.onload = function() {
+            updateCounter();
+            checkStatus();
+            renderBracketTree();
+        }
+
+        function copyCashNumber() {
+            navigator.clipboard.writeText("01044101582");
+            alert("تم نسخ رقم فودافون كاش: 01044101582");
+        }
+
+        function updateCounter() {
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+            let count = approved.length;
+
+            document.getElementById('registeredCount').innerText = count;
+            let percent = Math.min((count / MAX_PLAYERS) * 100, 100);
+            document.getElementById('progressBarFill').style.width = percent + "%";
+
+            if (count >= MAX_PLAYERS) {
+                document.getElementById('fullTournamentNotice').style.display = 'block';
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            let savedID = localStorage.getItem("my_registered_id");
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+            let isApproved = approved.some(p => p.id === savedID);
+
+            if ((tabId === 'bracketTab' || tabId === 'prizesTab') && savedID && !isApproved) {
+                alert("🔒 الشجرة والجوائز مقفولة تماماً حتى يقوم الأدمن بتأكيد تحويلك وقبولك!");
+                return;
+            }
+
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(btn) btn.classList.add('active');
+        }
+
+        function submitRegister() {
+            let name = document.getElementById('pName').value.trim();
+            let id = document.getElementById('pID').value.trim();
+            let phone = document.getElementById('pPhone').value.trim();
+
+            if (!name || !id || !phone) { alert("املا كل البيانات المطلوبة!"); return; }
+
+            // 🛑 فحص مانع تكرار الـ ID
+            let requests = JSON.parse(localStorage.getItem("admin_requests") || "[]");
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+
+            let idExistsInRequests = requests.some(r => r.id === id);
+            let idExistsInApproved = approved.some(a => a.id === id);
+
+            if (idExistsInRequests || idExistsInApproved) {
+                alert("⚠️ الـ ID ده مسجل بالفعل في البطولة أو قيد المراجعة! مش ينفع تسجل بـ ID واحد مرتين.");
+                return;
+            }
+
+            localStorage.setItem("my_registered_id", id);
+            let isWaitlist = approved.length >= MAX_PLAYERS;
+
+            requests.push({ name, id, phone, isWaitlist });
+            localStorage.setItem("admin_requests", JSON.stringify(requests));
+
+            if (isWaitlist) {
+                alert("⚠️ اكتمل عدد البطولة الحالية (50/50)! تم تسجيلك في قائمة انتظار البطولة القادمة.");
+            } else {
+                alert("تم إرسال طلبك بنجاح! حسابك قيد المراجعة والانتظار لحين تأكيد التحويل.");
+            }
+
+            checkStatus();
+        }
+
+        function checkStatus() {
+            let savedID = localStorage.getItem("my_registered_id");
+            if (!savedID) return;
+
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('myRegisteredID').innerText = savedID;
+
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+            let isApproved = approved.some(p => p.id === savedID);
+
+            if (!isApproved) {
+                document.getElementById('userLockedNotice').style.display = 'block';
+            } else {
+                document.getElementById('userLockedNotice').style.display = 'none';
+            }
+        }
+
+        function openAdminLogin(btn) {
+            let pass = prompt("أدخل كلمة سر الأدمن:");
+            if (pass === ADMIN_PASS) {
+                loadAdminData();
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+                document.getElementById('adminTab').classList.add('active');
+                if(btn) btn.classList.add('active');
+            } else if(pass !== null) { alert("كلمة السر خاطئة!"); }
+        }
+
+        function loadAdminData() {
+            let requests = JSON.parse(localStorage.getItem("admin_requests") || "[]");
+            let pendingContainer = document.getElementById('pendingRequests');
+            let waitlistContainer = document.getElementById('waitlistRequests');
+
+            let pendingHtml = "";
+            let waitlistHtml = "";
+
+            requests.forEach((req, idx) => {
+                let itemHtml = `
+                    <div style="background:#000; padding:10px; border-radius:8px; margin-bottom:8px; font-size:12px;">
+                        <p><b>الاسم:</b> ${req.name} | <b>ID:</b> ${req.id}</p>
+                        <p><b>رقم الكاش المحول منه:</b> ${req.phone}</p>
+                        <button class="admin-btn" style="width:100%; margin-top:5px;" onclick="approvePlayer(${idx})">تأكيد وقبول الاشتراك ✅</button>
+                    </div>
+                `;
+
+                if(req.isWaitlist) {
+                    waitlistHtml += itemHtml;
+                } else {
+                    pendingHtml += itemHtml;
+                }
+            });
+
+            pendingContainer.innerHTML = pendingHtml || "<p style='font-size:12px; color:#666;'>لا توجد طلبات معلقة للبطولة الحالية.</p>";
+            waitlistContainer.innerHTML = waitlistHtml || "<p style='font-size:12px; color:#666;'>لا يوجد لاعبين في قائمة الانتظار.</p>";
+
+            renderBracketTree();
+        }
+
+        function approvePlayer(idx) {
+            let requests = JSON.parse(localStorage.getItem("admin_requests") || "[]");
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+            
+            approved.push(requests[idx]);
+            requests.splice(idx, 1);
+
+            localStorage.setItem("admin_requests", JSON.stringify(requests));
+            localStorage.setItem("approved_players", JSON.stringify(approved));
+
+            alert("تم قبول اللاعب بنجاح وتحديث العداد!");
+            updateCounter();
+            loadAdminData();
+        }
+
+        // 🎲 إجراء القرعة وتوزيع المجموعات الخماسية
+        function generateGroupsDraw() {
+            let approved = JSON.parse(localStorage.getItem("approved_players") || "[]");
+            if(approved.length < 2) { alert("يجب قبول لاعبين على الأقل لإجراء القرعة!"); return; }
+
+            let shuffled = [...approved].sort(() => 0.5 - Math.random());
+            let groups = {};
+            let gIdx = 1;
+
+            for (let i = 0; i < shuffled.length; i += 5) {
+                groups["المجموعة " + gIdx] = shuffled.slice(i, i + 5);
+                gIdx++;
+            }
+
+            localStorage.setItem("groups_data", JSON.stringify(groups));
+            alert("تمت القرعة وتوزيع المجموعات بنجاح! 🎲");
+            renderBracketTree();
+        }
+
+        // 🏆 رسم الشجرة المجسمة بأوراقها وأسماء المجموعات والاعيبة
+        function renderBracketTree() {
+            let groups = JSON.parse(localStorage.getItem("groups_data") || "{}");
+            let winners = JSON.parse(localStorage.getItem("match_winners") || "{}");
+            let treeContainer = document.getElementById('visualBracketTree');
+            let adminContainer = document.getElementById('adminMatchControl');
+
+            if (Object.keys(groups).length === 0) {
+                treeContainer.innerHTML = "<p style='text-align:center; color:#666; font-size:12px; width:100%; padding:20px;'>الشجرة فارغة.. في انتظار إجراء القرعة وتوزيع المجموعات بواسطة الأدمن.</p>";
+                return;
+            }
+
+            let htmlTree = "";
+            let htmlAdmin = "";
+
+            htmlTree += `<div class="bracket-column"><div class="column-header">تصفيات المجموعات (أوراق الشجرة)</div>`;
+
+            for (let gName in groups) {
+                let players = groups[gName];
+                
+                for (let i = 0; i < players.length; i += 2) {
+                    let p1 = players[i];
+                    let p2 = players[i+1];
+                    let matchKey = `${gName}_M${i}`;
+
+                    let isP1Win = winners[matchKey] === p1?.id;
+                    let isP2Win = winners[matchKey] === p2?.id;
+
+                    htmlTree += `
+                        <div class="tree-leaf">
+                            <span class="group-tag">${gName}</span>
+                            <div class="player-row ${isP1Win ? 'winner' : ''}">
+                                <span><b>${p1 ? p1.name : 'متأهل تلقائي'}</b></span>
+                                <small>${p1 ? 'ID: ' + p1.id : ''}</small>
+                            </div>
+                            <div class="vs-tag">⚡ VS ⚡</div>
+                            <div class="player-row ${isP2Win ? 'winner' : ''}">
+                                <span><b>${p2 ? p2.name : 'BYE'}</b></span>
+                                <small>${p2 ? 'ID: ' + p2.id : ''}</small>
+                            </div>
+                        </div>
+                    `;
+
+                    if(p1 && p2) {
+                        htmlAdmin += `
+                            <div style="background:#000; padding:8px; border-radius:6px; margin-bottom:8px; font-size:12px;">
+                                <p style="color:var(--neon-gold);">${gName}: ${p1.name} ضد ${p2.name}</p>
+                                <button class="admin-btn" onclick="setWinner('${matchKey}', '${p1.id}')">تأهيل وفوز ${p1.name} 🏆</button>
+                                <button class="admin-btn admin-btn-red" onclick="setWinner('${matchKey}', '${p2.id}')">تأهيل وفوز ${p2.name} 🏆</button>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            htmlTree += `</div>`;
+
+            treeContainer.innerHTML = htmlTree;
+            if(adminContainer) adminContainer.innerHTML = htmlAdmin;
+        }
+
+        function setWinner(matchKey, playerId) {
+            let winners = JSON.parse(localStorage.getItem("match_winners") || "{}");
+            winners[matchKey] = playerId;
+            localStorage.setItem("match_winners", JSON.stringify(winners));
+            alert("تم تسليم النتيجة وتصعيد الفائز في شجرة المجموعات!");
+            renderBracketTree();
+        }
+    </script>
+</body>
+</html>
